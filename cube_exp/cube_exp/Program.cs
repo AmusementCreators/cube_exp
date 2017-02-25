@@ -14,6 +14,8 @@ namespace cube_exp
 
             asd.Engine.ChangeScene(new Scene.Game());
 
+            asd.Engine.ProfilerIsVisible = true;
+
             while(asd.Engine.DoEvents())
             {
                 asd.Engine.Update();
