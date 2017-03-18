@@ -15,15 +15,15 @@ namespace cube_exp.Scene
         protected override void OnRegistered()
         {
             Layer = new asd.Layer3D();
-                        AddLayer(Layer);
+            AddLayer(Layer);
 
             var cam = new asd.CameraObject3D()
             {
-                Position = new asd.Vector3DF(0, 20, 10),
-                Focus = new asd.Vector3DF(10, 10, 0),
-                FieldOfView = 50.0f,
+                Position = new asd.Vector3DF(100, 100, 100),
+                Focus = new asd.Vector3DF(10, 0, 10),
+                FieldOfView = 10.0f,
                 ZNear = 1.0f,
-                ZFar = 100.0f,
+                ZFar = 200.0f,
                 WindowSize = new asd.Vector2DI(800, 600),
             };
             Layer.AddObject(cam);
@@ -34,36 +34,33 @@ namespace cube_exp.Scene
             };
             Layer.AddObject(light1);
 
-            /*
-            Box = new BoxObject()
-            {
-                Rotation = new asd.Vector3DF(20.0f, 20.0f, 0.0f)
-            };
-            Layer.AddObject(Box);
-            */
-
             FieldData = new int[20, 20, 20];
             for (int i = 0; i < 20; i++)
             {
                 for (int j = 0; j < 20; j++)
                 {
-                    FieldData[i, j, 0] = 0;
+                    for (int k = 0; k < 20; k++)
+                    {
+                        FieldData[i, j, k] = j == 0 ? (i + k) % 2 : 0;
+                    }
                 }
             }
 
             for (int i = 0; i < 20; i++)
             {
-                //int j = 0;
-                for (int j = 0; j < i; j++)
+                for (int j = 0; j < 20; j++)
                 {
-                    int k = 0;
-                    //for (int k = 0; k < 20; k++)
+                    for (int k = 0; k < 20; k++)
                     {
-                        var b = new BoxObject()
+                        if (FieldData[i, j, k] == 1)
                         {
-                            Position = new asd.Vector3DF(i, j, k),
-                        };
-                        Layer.AddObject(b);
+                            var b = new BoxObject()
+                            {
+                                Position = new asd.Vector3DF(i, j, k),
+                                IsDrawn = FieldData[i, j, k] == 1,
+                            };
+                            Layer.AddObject(b);
+                        }
                     }
                 }
             }
