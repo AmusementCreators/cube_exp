@@ -11,7 +11,7 @@ namespace cube_exp.Scene
         asd.Layer3D Layer;
 
         int[,,] FieldData;
-
+        
         protected override void OnRegistered()
         {
             Layer = new asd.Layer3D();
@@ -19,7 +19,7 @@ namespace cube_exp.Scene
 
             var cam = new asd.CameraObject3D()
             {
-                Position = new asd.Vector3DF(100, 100, 100),
+                Position = new asd.Vector3DF(-100, 100, 100),
                 Focus = new asd.Vector3DF(10, 0, 10),
                 FieldOfView = 10.0f,
                 ZNear = 1.0f,
@@ -41,7 +41,7 @@ namespace cube_exp.Scene
                 {
                     for (int k = 0; k < 20; k++)
                     {
-                        FieldData[i, j, k] = j == 0 ? (i + k) % 2 : 0;
+                        FieldData[i, j, k] = j == 0 ? (i + k) % 2 + 1 : 0;
                     }
                 }
             }
@@ -64,6 +64,13 @@ namespace cube_exp.Scene
                     }
                 }
             }
+
+
+            var pl = new Player()
+            {
+                Position = new asd.Vector3DF(0, 5, 0)
+            };
+            Layer.AddObject(pl);
         }
 
         protected override void OnUpdating()
