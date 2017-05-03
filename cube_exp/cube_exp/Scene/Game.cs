@@ -9,24 +9,26 @@ namespace cube_exp.Scene
     class Game : asd.Scene
     {
         asd.Layer3D Layer;
+        asd.CameraObject3D Camera;
+        BoxObject Character;
 
         int[,,] FieldData;
-        
+
         protected override void OnRegistered()
         {
             Layer = new asd.Layer3D();
             AddLayer(Layer);
 
-            var cam = new asd.CameraObject3D()
+            Camera = new asd.CameraObject3D()
             {
-                Position = new asd.Vector3DF(-100, 100, 100),
-                Focus = new asd.Vector3DF(10, 0, 10),
-                FieldOfView = 10.0f,
+                Position = new asd.Vector3DF(-5, 5, 10),
+                Focus = new asd.Vector3DF(10.5f, 0, 10.5f),
+                FieldOfView = 70.0f,
                 ZNear = 1.0f,
-                ZFar = 200.0f,
+                ZFar = 100.0f,
                 WindowSize = new asd.Vector2DI(800, 600),
             };
-            Layer.AddObject(cam);
+            Layer.AddObject(Camera);
 
             var light1 = new asd.DirectionalLightObject3D()
             {
@@ -66,16 +68,16 @@ namespace cube_exp.Scene
             }
 
 
-            var pl = new Player()
+            Character = new Player()
             {
-                Position = new asd.Vector3DF(0, 5, 0)
+                Position = new asd.Vector3DF(0, 0, 0)
             };
-            Layer.AddObject(pl);
+            Layer.AddObject(Character);
         }
 
         protected override void OnUpdating()
         {
-
+            Camera.Focus = new asd.Vector3DF(Character.Position.X, 0, Character.Position.Z);
         }
     }
 }
