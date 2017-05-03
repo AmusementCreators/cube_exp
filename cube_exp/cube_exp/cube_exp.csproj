@@ -56,6 +56,7 @@
     <Compile Include="Scene\Game.cs" />
     <Compile Include="Scene\Map.cs" />
     <Compile Include="Scene\Player.cs" />
+    <Compile Include="Vector3DI.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

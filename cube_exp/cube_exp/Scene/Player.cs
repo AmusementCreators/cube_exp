@@ -12,9 +12,8 @@ namespace cube_exp.Scene
         private const float JumpPower = 0.00005f * MoveAnimationLength * MoveAnimationLength;
         private int MoveCount = MoveAnimationLength;
 
-        public asd.Vector3DF Velocity { get; private set; } = new asd.Vector3DF();
-        public asd.Vector2DI GridPos { get; private set; }
-        private asd.Vector2DI GridPos2;
+        public Vector3DI GridPos { get; private set; }
+        private Vector3DI GridPos2;
 
 
         protected override void OnUpdate()
@@ -22,9 +21,9 @@ namespace cube_exp.Scene
 
             if (MoveCount <= MoveAnimationLength)
             {
-                var axis = (Helper.Vector2DITo3DFXZ(GridPos2) - Helper.Vector2DITo3DFXZ(GridPos)) / MoveAnimationLength;
+                var axis = (GridPos2 - GridPos).ToAsd3DF() / MoveAnimationLength;
 
-                Position = Helper.Vector2DITo3DFXZ(GridPos) + axis * MoveCount + new asd.Vector3DF(0, Parabola(), 0);
+                Position = GridPos.ToAsd3DF() + axis * MoveCount + new asd.Vector3DF(0, Parabola(), 0);
                 MoveCount++;
             }
             else
@@ -32,26 +31,10 @@ namespace cube_exp.Scene
                 GridPos = GridPos2;
                 Console.WriteLine($"{Position.X:F2} {Position.Y:F2} {Position.Z:F2}");
 
-                if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Up) == asd.KeyState.Hold)
-                {
-                    MoveCount = 0;
-                    GridPos2 = GridPos + new asd.Vector2DI(0, 1);
-                }
-                if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Down) == asd.KeyState.Hold)
-                {
-                    MoveCount = 0;
-                    GridPos2 = GridPos + new asd.Vector2DI(0, -1);
-                }
-                if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Right) == asd.KeyState.Hold)
-                {
-                    MoveCount = 0;
-                    GridPos2 = GridPos + new asd.Vector2DI(1, 0);
-                }
-                if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Left) == asd.KeyState.Hold)
-                {
-                    MoveCount = 0;
-                    GridPos2 = GridPos + new asd.Vector2DI(-1, 0);
-                }
+                if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Up) == asd.KeyState.Hold) TryMove(0, 1);
+                if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Down) == asd.KeyState.Hold) TryMove(0, -1);
+                if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Right) == asd.KeyState.Hold) TryMove(1, 0);
+                if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Left) == asd.KeyState.Hold) TryMove(-1, 0);
             }
         }
 
@@ -60,6 +43,16 @@ namespace cube_exp.Scene
             const float ys = ((float)MoveAnimationLength * MoveAnimationLength) / 4;
             float x = (MoveCount - (float)MoveAnimationLength / 2);
             return JumpPower * (ys - x * x);
+        }
+
+        private void TryMove(int x, int z)
+        {
+            var cpos = GridPos + new Vector3DI(x, 0, z);
+            while ((Layer.Scene as Game).IsFilled(cpos.X, cpos.Y, cpos.Z) != 0) cpos.Y++;
+            while ((Layer.Scene as Game).IsFilled(cpos.X, cpos.Y - 1, cpos.Z) == 0) cpos.Y--;
+            if (cpos.Y - GridPos.Y > 1) return; // 2段以上は上がれない
+            GridPos2 = cpos;
+            MoveCount = 0;
         }
     }
 }

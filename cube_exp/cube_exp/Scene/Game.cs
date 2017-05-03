@@ -8,45 +8,53 @@ namespace cube_exp.Scene
 {
     class Game : asd.Scene
     {
-        asd.Layer3D Layer;
-        asd.CameraObject3D Camera;
-        BoxObject Character;
+        public asd.CameraObject3D Camera { get; private set; }
+        public BoxObject Character { get; private set; }
+
+        private MapRawData MapData;
+
+        public int IsFilled(int x, int y, int z)
+        {
+            if (x < 0 || y < 0 || z < 0) throw new ArgumentException();
+            if (x >= MapData.SizeX) throw new ArgumentException();
+            if (y >= MapData.SizeY) throw new ArgumentException();
+            if (z >= MapData.SizeZ) throw new ArgumentException();
+            return MapData.Data[y][x][z];
+        }
 
         protected override void OnRegistered()
         {
-            Layer = new asd.Layer3D();
-            AddLayer(Layer);
+            var layer = new asd.Layer3D();
+            AddLayer(layer);
 
-            var testMap = new MapRawData("MapTest.txt");
-            foreach (var o in testMap)
+            MapData = new MapRawData("MapTest.txt");
+            foreach (var o in MapData)
             {
-                Layer.AddObject(o);
+                layer.AddObject(o);
             }
 
             Camera = new asd.CameraObject3D()
             {
-                Position = new asd.Vector3DF(testMap.SizeX, 5, testMap.SizeZ),
+                Position = new asd.Vector3DF(MapData.SizeX, 5, MapData.SizeZ),
                 Focus = new asd.Vector3DF(10.5f, 0, 10.5f),
                 FieldOfView = 70.0f,
                 ZNear = 1.0f,
                 ZFar = 100.0f,
                 WindowSize = new asd.Vector2DI(800, 600),
             };
-            Layer.AddObject(Camera);
+            layer.AddObject(Camera);
 
             var light1 = new asd.DirectionalLightObject3D()
             {
                 Rotation = new asd.Vector3DF(10, 50, 50),
             };
-            Layer.AddObject(light1);
-
-
+            layer.AddObject(light1);
 
             Character = new Player()
             {
                 Position = new asd.Vector3DF(0, 0, 0)
             };
-            Layer.AddObject(Character);
+            layer.AddObject(Character);
         }
 
         protected override void OnUpdating()
