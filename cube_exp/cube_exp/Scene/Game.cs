@@ -16,9 +16,7 @@ namespace cube_exp.Scene
         public int IsFilled(int x, int y, int z)
         {
             if (x < 0 || y < 0 || z < 0) return 1;
-            if (x >= MapData.SizeX) throw new ArgumentException();
-            if (y >= MapData.SizeY) throw new ArgumentException();
-            if (z >= MapData.SizeZ) throw new ArgumentException();
+            if (x >= MapData.SizeX || y >= MapData.SizeY || z >= MapData.SizeZ) return 1;
             return MapData.Data[y][x][z];
         }
 
