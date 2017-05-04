@@ -42,6 +42,16 @@ namespace cube_exp
             return new Vector3DI(v.X / d, v.Y / d, v.Z / d);
         }
 
+        public static bool operator ==(Vector3DI v1, Vector3DI v2)
+        {
+            return v1.X == v2.X && v1.Y == v2.Y && v1.Z == v2.Z;
+        }
+
+        public static bool operator !=(Vector3DI v1, Vector3DI v2)
+        {
+            return v1.X != v2.X || v1.Y != v2.Y || v1.Z != v2.Z;
+        }
+
         public asd.Vector3DF ToAsd3DF()
         {
             return new asd.Vector3DF(X, Y, Z);

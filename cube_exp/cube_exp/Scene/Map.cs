@@ -53,7 +53,6 @@ namespace cube_exp.Scene
                             var obj = new BoxObject()
                             {
                                 Position = new asd.Vector3DF(x, y, z),
-
                             };
                             yield return obj;
                         }

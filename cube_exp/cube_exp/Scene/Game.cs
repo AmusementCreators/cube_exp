@@ -15,7 +15,7 @@ namespace cube_exp.Scene
 
         public int IsFilled(int x, int y, int z)
         {
-            if (x < 0 || y < 0 || z < 0) throw new ArgumentException();
+            if (x < 0 || y < 0 || z < 0) return 1;
             if (x >= MapData.SizeX) throw new ArgumentException();
             if (y >= MapData.SizeY) throw new ArgumentException();
             if (z >= MapData.SizeZ) throw new ArgumentException();
@@ -35,7 +35,7 @@ namespace cube_exp.Scene
 
             Camera = new asd.CameraObject3D()
             {
-                Position = new asd.Vector3DF(MapData.SizeX, 5, MapData.SizeZ),
+                Position = new asd.Vector3DF(MapData.SizeX, 15, MapData.SizeZ),
                 Focus = new asd.Vector3DF(10.5f, 0, 10.5f),
                 FieldOfView = 70.0f,
                 ZNear = 1.0f,
@@ -46,14 +46,17 @@ namespace cube_exp.Scene
 
             var light1 = new asd.DirectionalLightObject3D()
             {
-                Rotation = new asd.Vector3DF(10, 50, 50),
+                Rotation = new asd.Vector3DF(10, 50, 10),
             };
             layer.AddObject(light1);
 
-            Character = new Player()
-            {
-                Position = new asd.Vector3DF(0, 0, 0)
-            };
+            var s1 = new Slime(new Vector3DI(5, 3, 5), false);
+            layer.AddObject(s1);
+            var s2 = new Slime(new Vector3DI(5, 3, 5), false, s1);
+            layer.AddObject(s2);
+            var s3 = new Slime(new Vector3DI(5, 3, 5), false, s2);
+            layer.AddObject(s3);
+            Character = new Slime(new Vector3DI(5, 3, 5), true, s3);
             layer.AddObject(Character);
         }
 
