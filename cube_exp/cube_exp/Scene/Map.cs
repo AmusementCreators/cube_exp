@@ -11,11 +11,13 @@ namespace cube_exp.Scene
         public int SizeX { get; private set; }
         public int SizeY { get; private set; }
         public int SizeZ { get; private set; }
-
         public int[][][] Data;
-        public MapRawData(string Name)
+
+        public IEnumerator<BoxObject> Blocks { get; private set; }
+
+        public void LoadMapFile(string fileName)
         {
-            var file = asd.Engine.File.CreateStaticFile(Name);
+            var file = asd.Engine.File.CreateStaticFile(fileName);
             var raw = Encoding.UTF8.GetString(file.Buffer)
                 .Split(new[] { ' ', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(x => int.Parse(x)).ToArray();
@@ -48,13 +50,9 @@ namespace cube_exp.Scene
                 {
                     for (int z = 0; z < SizeZ; z++)
                     {
-                        if (Data[y][x][z] == 1)
+                        if (Data[y][x][z] != 0)
                         {
-                            var obj = new BoxObject()
-                            {
-                                Position = new asd.Vector3DF(x, y, z),
-                            };
-                            yield return obj;
+                            yield return BoxObjectFactory.Create<BoxObject>(new Vector3DI(x, y, z), Data[y][x][z]);
                         }
                     }
                 }

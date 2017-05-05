@@ -13,19 +13,27 @@ namespace cube_exp.Scene
         private const float JumpPower = 0.00005f * MoveAnimationLength * MoveAnimationLength;
         private int MoveCount = MoveAnimationLength + SlaveMoveDelay + 1;
 
-        public Vector3DI GridPos { get; set; }
-        private Vector3DI GridPos2, GridPosOld;
+        public Vector3DI GridPos { get; private set; }
+        protected Vector3DI GridPos2 { get; private set; }
+        protected Vector3DI GridPosOld { get; private set; }
 
         public bool IsMaster = false;
         public Slime Slave = null;
 
-        public Slime(Vector3DI pos, bool isMaster = false, Slime slave = null)
+        public bool IsCombined { get; protected set; }
+        public bool IsChanging { get; protected set; }
+
+        public Slime()
+        {
+
+        }
+
+        public void SetInitialPosition(Vector3DI pos)
         {
             Position = pos.ToAsd3DF();
             GridPos = pos;
             GridPos2 = pos;
-            IsMaster = isMaster;
-            Slave = slave;
+            GridPosOld = pos;
         }
 
         protected override void OnUpdate()
@@ -34,6 +42,7 @@ namespace cube_exp.Scene
             {
                 var axis = (GridPos2 - GridPos).ToAsd3DF() / MoveAnimationLength;
                 Position = GridPos.ToAsd3DF() + axis * MoveCount + new asd.Vector3DF(0, Parabola(), 0);
+                if (IsCombined) Position += new asd.Vector3DF(0.5f, 0.5f, 0.5f);
             }
             else
             {
@@ -44,15 +53,33 @@ namespace cube_exp.Scene
                     if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Down) == asd.KeyState.Hold) Move(0, -1);
                     if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Right) == asd.KeyState.Hold) Move(1, 0);
                     if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Left) == asd.KeyState.Hold) Move(-1, 0);
+                    if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Space) == asd.KeyState.Push)
+                    {
+                        if (!IsCombined)
+                            StartCombine();
+                        else
+                            StartDisperse();
+                    }
                 }
             }
 
             if (MoveCount == MoveAnimationLength + SlaveMoveDelay)
             {
-                if (Slave != null) Slave.MoveTo(GridPosOld);
+                if (Slave != null && !IsChanging)
+                {
+                    Slave.MoveTo(GridPosOld, true);
+                }
+                IsChanging = false;
             }
             MoveCount++;
-            Console.WriteLine($"{IsMaster} {GridPos.X} {GridPos.Y} {GridPos.Z}");
+            Console.WriteLine($"{IsDrawn} ");
+
+            if (IsMaster && IsCombined)
+            {
+                var c = 1.0f;
+                for (var s = Slave; s != null; s = s.Slave) c *= 1.2f;
+                Scale = new asd.Vector3DF(c, c, c);
+            }
         }
 
         private float Parabola()
@@ -73,11 +100,43 @@ namespace cube_exp.Scene
             while ((Layer.Scene as Game).IsFilled(cpos.X, cpos.Y, cpos.Z) != 0) cpos.Y++;
             while ((Layer.Scene as Game).IsFilled(cpos.X, cpos.Y - 1, cpos.Z) == 0) cpos.Y--;
             if (cpos.Y - GridPos.Y > 1 && !force) return; // 2段以上は上がれない
+            if (Layer.Objects.OfType<Slime>().Any(x => x.GridPos == cpos || x.GridPos2 == cpos) && !force) return; // すでに小スライムがある場所には行かない
             MoveCount = 0;
             GridPosOld = GridPos;
             GridPos2 = cpos;
         }
 
+        private void StartCombine()
+        {
+            for (var s = Slave; s != null; s = s.Slave)
+            {
+                s.MoveTo(GridPos, true);
+                s.IsChanging = true;
+            }
+            IsCombined = true;
+        }
 
+        private void StartDisperse()
+        {
+            IsCombined = false;
+            Scale = new asd.Vector3DF(1, 1, 1);
+            MoveTo(GridPos, true);
+            IsChanging = true;
+
+            var s = Slave;
+            s.MoveTo(GridPos + new Vector3DI(1, 0, 0));
+            s.IsDrawn = true;
+            s.IsChanging = true;
+            s = s.Slave;
+
+            s.MoveTo(GridPos + new Vector3DI(1, 0, 1));
+            s.IsDrawn = true;
+            s.IsChanging = true;
+            s = s.Slave;
+
+            s.MoveTo(GridPos + new Vector3DI(0, 0, 1));
+            s.IsChanging = true;
+            s.IsDrawn = true;
+        }
     }
 }
