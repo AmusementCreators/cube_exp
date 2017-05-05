@@ -72,13 +72,11 @@ namespace cube_exp.Scene
                 IsChanging = false;
             }
             MoveCount++;
-            Console.WriteLine($"{IsDrawn} ");
-
             if (IsMaster && IsCombined)
             {
                 var c = 1.0f;
                 for (var s = Slave; s != null; s = s.Slave) c *= 1.2f;
-                Scale = new asd.Vector3DF(c, c, c);
+                Scale = new asd.Vector3DF(c, c, c) / 2;
             }
         }
 
@@ -97,13 +95,32 @@ namespace cube_exp.Scene
 
         private void MoveTo(Vector3DI cpos, bool force = false)
         {
-            while ((Layer.Scene as Game).IsFilled(cpos.X, cpos.Y, cpos.Z) != 0) cpos.Y++;
-            while ((Layer.Scene as Game).IsFilled(cpos.X, cpos.Y - 1, cpos.Z) == 0) cpos.Y--;
+            while (!CheckFilled(cpos)) cpos.Y++;
+            while (CheckFilled(cpos - new Vector3DI(0, 1, 0))) cpos.Y--;
             if (cpos.Y - GridPos.Y > 1 && !force) return; // 2段以上は上がれない
-            if (Layer.Objects.OfType<Slime>().Any(x => x.GridPos == cpos || x.GridPos2 == cpos) && !force) return; // すでに小スライムがある場所には行かない
+            if (Layer.Objects.OfType<Slime>().Any(x => x.GridPos == cpos || x.GridPos2 == cpos) && !force && !IsCombined) return; // すでに小スライムがある場所には行かない
             MoveCount = 0;
             GridPosOld = GridPos;
             GridPos2 = cpos;
+        }
+
+        private bool CheckFilled(Vector3DI pos)
+        {
+            if (!IsCombined)
+            {
+                return (Layer.Scene as Game).IsFilled(pos.X, pos.Y, pos.Z) == 0;
+            }
+            else
+            {
+                for (int y = pos.Y; y <= pos.Y + 1; y++)
+                {
+                    if ((Layer.Scene as Game).IsFilled(pos.X, y, pos.Z) != 0 ||
+                    (Layer.Scene as Game).IsFilled(pos.X + 1, y, pos.Z) != 0 ||
+                    (Layer.Scene as Game).IsFilled(pos.X + 1, y, pos.Z + 1) != 0 ||
+                    (Layer.Scene as Game).IsFilled(pos.X, y, pos.Z + 1) != 0) return false;
+                }
+                return true;
+            }
         }
 
         private void StartCombine()
@@ -119,7 +136,7 @@ namespace cube_exp.Scene
         private void StartDisperse()
         {
             IsCombined = false;
-            Scale = new asd.Vector3DF(1, 1, 1);
+            Scale = new asd.Vector3DF(1, 1, 1) / 2;
             MoveTo(GridPos, true);
             IsChanging = true;
 
