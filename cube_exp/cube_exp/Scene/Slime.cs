@@ -47,20 +47,7 @@ namespace cube_exp.Scene
             else
             {
                 GridPos = GridPos2;
-                if (IsMaster)
-                {
-                    if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Up) == asd.KeyState.Hold) Move(0, 1);
-                    if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Down) == asd.KeyState.Hold) Move(0, -1);
-                    if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Right) == asd.KeyState.Hold) Move(1, 0);
-                    if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Left) == asd.KeyState.Hold) Move(-1, 0);
-                    if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Space) == asd.KeyState.Push)
-                    {
-                        if (!IsCombined)
-                            StartCombine();
-                        else
-                            StartDisperse();
-                    }
-                }
+                if (IsMaster) Control();
             }
 
             if (MoveCount == MoveAnimationLength + SlaveMoveDelay)
@@ -77,6 +64,38 @@ namespace cube_exp.Scene
                 var c = 1.0f;
                 for (var s = Slave; s != null; s = s.Slave) c *= 1.2f;
                 Scale = new asd.Vector3DF(c, c, c) / 2;
+            }
+        }
+
+        private void Control()
+        {
+            var angle = (int)((Layer.Scene as Game).CameraAngleR / (float)Math.PI * 180.0 + 180 + 22.5);
+            while (angle > 360) angle -= 360;
+            while (angle < 0) angle += 360;
+            angle /= 45;
+
+            int[][] dir = new[] {
+                new[] { 1,0 },
+                new[] { 1,1 },
+                new[] { 0,1 },
+                new[] { -1,1 },
+                new[] { -1,0 },
+                new[] { -1,-1 },
+                new[] { 0,-1 },
+                new[] { 1,-1 },
+            };
+
+            if (asd.Engine.Keyboard.GetKeyState(asd.Keys.W) == asd.KeyState.Hold) Move(dir[angle][0], dir[angle][1]);
+            else if (asd.Engine.Keyboard.GetKeyState(asd.Keys.S) == asd.KeyState.Hold) Move(dir[(angle + 4) % 8][0], dir[(angle + 4) % 8][1]);
+            else if (asd.Engine.Keyboard.GetKeyState(asd.Keys.A) == asd.KeyState.Hold) Move(dir[(angle + 6) % 8][0], dir[(angle + 6) % 8][1]);
+            else if (asd.Engine.Keyboard.GetKeyState(asd.Keys.D) == asd.KeyState.Hold) Move(dir[(angle + 2) % 8][0], dir[(angle + 2) % 8][1]);
+
+            if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Space) == asd.KeyState.Push)
+            {
+                if (!IsCombined)
+                    StartCombine();
+                else
+                    StartDisperse();
             }
         }
 

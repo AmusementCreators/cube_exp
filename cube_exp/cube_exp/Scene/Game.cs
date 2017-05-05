@@ -11,6 +11,9 @@ namespace cube_exp.Scene
         public asd.CameraObject3D Camera { get; private set; }
         public Slime Character { get; private set; }
 
+        public float CameraAngleH { get; private set; } = (float)Math.PI / 4.0f;
+        public float CameraAngleR { get; private set; } = (float)Math.PI / 4.0f;
+
         private MapRawData MapData;
 
         public int IsFilled(int x, int y, int z)
@@ -41,16 +44,21 @@ namespace cube_exp.Scene
                 FieldOfView = 70.0f,
                 ZNear = 1.0f,
                 ZFar = 100.0f,
-                WindowSize = new asd.Vector2DI(800, 600),
+                WindowSize = new asd.Vector2DI(1280, 720),
             };
             layer.AddObject(Camera);
 
             var light1 = new asd.DirectionalLightObject3D()
             {
-                Rotation = new asd.Vector3DF(10, 50, 10),
+                Rotation = new asd.Vector3DF(1, 10, 1),
             };
             layer.AddObject(light1);
 
+            InitializeSlimes(layer);
+        }
+
+        private void InitializeSlimes(asd.Layer3D layer)
+        {
             var s1 = BoxObjectFactory.Create<Slime>(new Vector3DI(5, 3, 5), 0);
             s1.SetInitialPosition(new Vector3DI(5, 3, 5));
             s1.IsMaster = false;
@@ -79,6 +87,18 @@ namespace cube_exp.Scene
         protected override void OnUpdating()
         {
             Camera.Focus = new asd.Vector3DF(Character.Position.X, 0, Character.Position.Z);
+
+            if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Up) == asd.KeyState.Hold && CameraAngleH < (float)Math.PI / 3.0f) CameraAngleH += 0.01f;
+            if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Down) == asd.KeyState.Hold && CameraAngleH > 0) CameraAngleH -= 0.01f;
+            if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Left) == asd.KeyState.Hold) CameraAngleR -= 0.01f;
+            if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Right) == asd.KeyState.Hold) CameraAngleR += 0.01f;
+
+            Camera.Position = Camera.Focus + 15.0f * new asd.Vector3DF(
+                (float)Math.Cos(CameraAngleH) * (float)Math.Cos(CameraAngleR),
+                (float)Math.Sin(CameraAngleH),
+                (float)Math.Cos(CameraAngleH) * (float)Math.Sin(CameraAngleR)
+                );
         }
+
     }
 }
