@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel;
 
 namespace cube_exp.Scene
 {
     class Slime : BoxObject
     {
-        private const int MoveAnimationLength = 20;
-        private const int SlaveMoveDelay = 3;
+        private const uint MoveAnimationLength = 20;
+        private const uint SlaveMoveDelay = 10;
         private const float JumpPower = 0.00005f * MoveAnimationLength * MoveAnimationLength;
-        private int MoveCount = MoveAnimationLength + SlaveMoveDelay + 1;
+        private uint MoveCount = MoveAnimationLength + 1;
 
         public Vector3DI GridPos { get; private set; }
         protected Vector3DI GridPos2 { get; private set; }
@@ -22,6 +21,8 @@ namespace cube_exp.Scene
 
         public bool IsCombined { get; protected set; }
         public bool IsChanging { get; protected set; }
+
+        public int CurrentType = 1;
 
         public Slime()
         {
@@ -50,9 +51,9 @@ namespace cube_exp.Scene
                 if (IsMaster) Control();
             }
 
-            if (MoveCount == MoveAnimationLength + SlaveMoveDelay)
+            if (Slave != null && MoveCount == MoveAnimationLength + SlaveMoveDelay && Slave.MoveCount >= MoveAnimationLength)
             {
-                if (Slave != null && !IsChanging)
+                if (!IsChanging)
                 {
                     Slave.MoveTo(GridPosOld, true);
                 }
@@ -97,6 +98,15 @@ namespace cube_exp.Scene
                 else
                     StartDisperse();
             }
+
+            if (asd.Engine.Keyboard.GetKeyState(asd.Keys.LeftShift) == asd.KeyState.Push)
+            {
+                for (var s = this; s != null; s = s.Slave)
+                {
+                    CurrentType = (CurrentType + 1) % 5 + 1;
+                    BoxObjectFactory.UpdateModel(s, CurrentType);
+                }
+            }
         }
 
         private float Parabola()
@@ -118,26 +128,50 @@ namespace cube_exp.Scene
             while (CheckFilled(cpos - new Vector3DI(0, 1, 0))) cpos.Y--;
             if (cpos.Y - GridPos.Y > 1 && !force) return; // 2段以上は上がれない
             if (Layer.Objects.OfType<Slime>().Any(x => x.GridPos == cpos || x.GridPos2 == cpos) && !force && !IsCombined) return; // すでに小スライムがある場所には行かない
+            if (!CheckFloorType(cpos)) return;
+
             MoveCount = 0;
             GridPosOld = GridPos;
             GridPos2 = cpos;
+        }
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        private int _BlockCode(Vector3DI pos, int offsetX = 0, int offsetY = 0, int offsetZ = 0)
+        {
+            return (Layer.Scene as Game).IsFilled(pos.X + offsetX, pos.Y + offsetY, pos.Z + offsetZ);
         }
 
         private bool CheckFilled(Vector3DI pos)
         {
             if (!IsCombined)
             {
-                return (Layer.Scene as Game).IsFilled(pos.X, pos.Y, pos.Z) == 0;
+                return _BlockCode(pos) == 0;
             }
             else
             {
-                for (int y = pos.Y; y <= pos.Y + 1; y++)
+                for (int y = 0; y <= 1; y++)
                 {
-                    if ((Layer.Scene as Game).IsFilled(pos.X, y, pos.Z) != 0 ||
-                    (Layer.Scene as Game).IsFilled(pos.X + 1, y, pos.Z) != 0 ||
-                    (Layer.Scene as Game).IsFilled(pos.X + 1, y, pos.Z + 1) != 0 ||
-                    (Layer.Scene as Game).IsFilled(pos.X, y, pos.Z + 1) != 0) return false;
+                    if (_BlockCode(pos, 0, y, 0) != 0) return false;
+                    if (_BlockCode(pos, 1, y, 0) != 0) return false;
+                    if (_BlockCode(pos, 1, y, 1) != 0) return false;
+                    if (_BlockCode(pos, 0, y, 1) != 0) return false;
                 }
+                return true;
+            }
+        }
+
+        private bool CheckFloorType(Vector3DI pos)
+        {
+            if (!IsCombined)
+            {
+                return _BlockCode(pos, 0, -1, 0) == CurrentType;
+            }
+            else
+            {
+                if (_BlockCode(pos, 0, -1, 0) != CurrentType) return false;
+                if (_BlockCode(pos, 1, -1, 0) != CurrentType) return false;
+                if (_BlockCode(pos, 1, -1, 1) != CurrentType) return false;
+                if (_BlockCode(pos, 0, -1, 1) != CurrentType) return false;
                 return true;
             }
         }
