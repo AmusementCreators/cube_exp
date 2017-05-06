@@ -6,15 +6,36 @@ using System.Threading.Tasks;
 
 namespace cube_exp.Scene
 {
+    /// <summary>
+    /// ファイルから読み込んだ生のマップデータ
+    /// </summary>
     class MapRawData
     {
+        /// <summary>
+        /// マップの幅
+        /// </summary>
         public int SizeX { get; private set; }
+
+        /// <summary>
+        /// マップの高さ
+        /// </summary>
+        /// <remarks>最高段+1無いと移動先判定時に落ちる</remarks>
         public int SizeY { get; private set; }
+
+        /// <summary>
+        /// マップの奥行
+        /// </summary>
         public int SizeZ { get; private set; }
-        public int[][][] Data;
 
-        public IEnumerator<BoxObject> Blocks { get; private set; }
+        /// <summary>
+        /// マップデータ
+        /// </summary>
+        /// <remarks>順番に注意。Data[Y][X][Z]</remarks>
+        private int[][][] Data;
 
+        /// <summary>
+        /// マップファイルを読み込む
+        /// </summary>
         public void LoadMapFile(string fileName)
         {
             var file = asd.Engine.File.CreateStaticFile(fileName);
@@ -42,7 +63,11 @@ namespace cube_exp.Scene
             }
         }
 
-        public IEnumerator<BoxObject> GetEnumerator()
+        /// <summary>
+        /// マップ上のオブジェクトを生成して列挙する
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator<asd.ModelObject3D> GetEnumerator()
         {
             for (int x = 0; x < SizeX; x++)
             {
@@ -52,11 +77,17 @@ namespace cube_exp.Scene
                     {
                         if (Data[y][x][z] != 0)
                         {
-                            yield return BoxObjectFactory.Create<BoxObject>(new Vector3DI(x, y, z), Data[y][x][z]);
+                            yield return ObjectFactory.Create<asd.ModelObject3D>(new Vector3DI(x, y, z), Data[y][x][z]);
                         }
                     }
                 }
             }
+        }
+
+
+        public int GetData(int x, int y, int z)
+        {
+            return Data[y][x][z];
         }
     }
 }

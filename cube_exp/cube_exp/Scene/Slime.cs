@@ -5,30 +5,88 @@ using System.ComponentModel;
 
 namespace cube_exp.Scene
 {
-    class Slime : BoxObject
+    /// <summary>
+    /// スライム
+    /// </summary>
+    class Slime : asd.ModelObject3D
     {
+        /// <summary>
+        /// 1マス移動するモーションのフレーム数
+        /// </summary>
         private const uint MoveAnimationLength = 20;
+
+        /// <summary>
+        /// 移動が終わってから後続のスライムの移動を開始するまでの遅延フレーム数
+        /// </summary>
         private const uint SlaveMoveDelay = 10;
+
+        /// <summary>
+        /// ジャンプ高さ計算時に用いる係数
+        /// </summary>
         private const float JumpPower = 0.00005f * MoveAnimationLength * MoveAnimationLength;
+
+        /// <summary>
+        /// 経過フレーム数
+        /// </summary>
         private uint MoveCount = MoveAnimationLength + 1;
 
+
+        /// <summary>
+        /// 現在の座標
+        /// </summary>
         public Vector3DI GridPos { get; private set; }
+
+        /// <summary>
+        /// 次に移動する先の座標
+        /// </summary>
         protected Vector3DI GridPos2 { get; private set; }
+
+        /// <summary>
+        /// 1つ前の座標
+        /// </summary>
         protected Vector3DI GridPosOld { get; private set; }
 
-        public bool IsMaster = false;
-        public Slime Slave = null;
+        /// <summary>
+        /// メインのスライム（操作するやつ）かどうか
+        /// </summary>
+        public bool IsMaster { get; set; } = false;
 
+        /// <summary>
+        /// 後続のスライム
+        /// </summary>
+        public Slime Slave { get; set; } = null;
+
+
+        /// <summary>
+        /// 合体状態であるかどうか
+        /// </summary>
         public bool IsCombined { get; protected set; }
+
+        /// <summary>
+        /// 合体・分裂中であるかどうか
+        /// </summary>
         public bool IsChanging { get; protected set; }
 
-        public int CurrentType = 1;
 
+        /// <summary>
+        /// 現在のテクスチャ番号
+        /// </summary>
+        public int CurrentType { get; private set; } = 1;
+
+
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
         public Slime()
         {
 
         }
 
+        /// <summary>
+        /// 初期座標をセットする
+        /// </summary>
+        /// <remarks>各種座標系プロパティを一気に上書きする</remarks>
         public void SetInitialPosition(Vector3DI pos)
         {
             Position = pos.ToAsd3DF();
@@ -39,42 +97,53 @@ namespace cube_exp.Scene
 
         protected override void OnUpdate()
         {
-            if (MoveCount <= MoveAnimationLength)
+            if (MoveCount <= MoveAnimationLength)//移動中
             {
                 var axis = (GridPos2 - GridPos).ToAsd3DF() / MoveAnimationLength;
                 Position = GridPos.ToAsd3DF() + axis * MoveCount + new asd.Vector3DF(0, Parabola(), 0);
                 if (IsCombined) Position += new asd.Vector3DF(0.5f, 0.5f, 0.5f);
             }
-            else
+            else //移動完了
             {
                 GridPos = GridPos2;
                 if (IsMaster) Control();
             }
 
             if (Slave != null && MoveCount == MoveAnimationLength + SlaveMoveDelay && Slave.MoveCount >= MoveAnimationLength)
-            {
+            {//サブの移動
+
                 if (!IsChanging)
                 {
                     Slave.MoveTo(GridPosOld, true);
                 }
                 IsChanging = false;
             }
-            MoveCount++;
+
+            //合体すると大きくなる
             if (IsMaster && IsCombined)
             {
                 var c = 1.0f;
                 for (var s = Slave; s != null; s = s.Slave) c *= 1.2f;
                 Scale = new asd.Vector3DF(c, c, c) / 2;
             }
+
+            //時間は常に進む
+            MoveCount++;
+
         }
 
+        /// <summary>
+        /// スライムの操作を受け付ける
+        /// </summary>
         private void Control()
         {
+            //角度計算
             var angle = (int)((Layer.Scene as Game).CameraAngleR / (float)Math.PI * 180.0 + 180 + 22.5);
             while (angle > 360) angle -= 360;
             while (angle < 0) angle += 360;
             angle /= 45;
 
+            //角度→移動方向のテーブル
             int[][] dir = new[] {
                 new[] { 1,0 },
                 new[] { 1,1 },
@@ -86,11 +155,13 @@ namespace cube_exp.Scene
                 new[] { 1,-1 },
             };
 
+            //移動
             if (asd.Engine.Keyboard.GetKeyState(asd.Keys.W) == asd.KeyState.Hold) Move(dir[angle][0], dir[angle][1]);
             else if (asd.Engine.Keyboard.GetKeyState(asd.Keys.S) == asd.KeyState.Hold) Move(dir[(angle + 4) % 8][0], dir[(angle + 4) % 8][1]);
             else if (asd.Engine.Keyboard.GetKeyState(asd.Keys.A) == asd.KeyState.Hold) Move(dir[(angle + 6) % 8][0], dir[(angle + 6) % 8][1]);
             else if (asd.Engine.Keyboard.GetKeyState(asd.Keys.D) == asd.KeyState.Hold) Move(dir[(angle + 2) % 8][0], dir[(angle + 2) % 8][1]);
 
+            //合体・分裂
             if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Space) == asd.KeyState.Push)
             {
                 if (!IsCombined)
@@ -99,16 +170,21 @@ namespace cube_exp.Scene
                     StartDisperse();
             }
 
+            //色の変更
             if (asd.Engine.Keyboard.GetKeyState(asd.Keys.LeftShift) == asd.KeyState.Push)
             {
+                CurrentType = (CurrentType + 1) % 5 + 1;
                 for (var s = this; s != null; s = s.Slave)
                 {
-                    CurrentType = (CurrentType + 1) % 5 + 1;
-                    BoxObjectFactory.UpdateModel(s, CurrentType);
+                    s.CurrentType = CurrentType;
+                    ObjectFactory.UpdateModel(s, CurrentType);
                 }
             }
         }
 
+        /// <summary>
+        /// ジャンプ中の高さを生成する
+        /// </summary>
         private float Parabola()
         {
             const float ys = ((float)MoveAnimationLength * MoveAnimationLength) / 4;
@@ -116,12 +192,21 @@ namespace cube_exp.Scene
             return (ys - x * x) * (IsMaster ? JumpPower : JumpPower / 2);
         }
 
+        /// <summary>
+        /// (<see cref="x"/>, 0, <see cref="z"/>) 移動する
+        /// </summary>
+        /// <remarks>上り下りは内部で処理する</remarks>
         private void Move(int x, int z)
         {
             var cpos = GridPos + new Vector3DI(x, 0, z);
             MoveTo(cpos);
         }
 
+        /// <summary>
+        /// <see cref="cpos"/>「に」 移動する
+        /// </summary>
+        /// <param name="cpos">移動先</param>
+        /// <param name="force">一部条件を無視して移動するかどうか</param>
         private void MoveTo(Vector3DI cpos, bool force = false)
         {
             while (!CheckFilled(cpos)) cpos.Y++;
@@ -135,12 +220,18 @@ namespace cube_exp.Scene
             GridPos2 = cpos;
         }
 
+        /// <summary>
+        /// マップデータの取得
+        /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         private int _BlockCode(Vector3DI pos, int offsetX = 0, int offsetY = 0, int offsetZ = 0)
         {
-            return (Layer.Scene as Game).IsFilled(pos.X + offsetX, pos.Y + offsetY, pos.Z + offsetZ);
+            return (Layer.Scene as Game).GetMapData(pos.X + offsetX, pos.Y + offsetY, pos.Z + offsetZ);
         }
 
+        /// <summary>
+        /// <see cref="pos"/>周辺に空きがあるかどうかを調べる
+        /// </summary>
         private bool CheckFilled(Vector3DI pos)
         {
             if (!IsCombined)
@@ -160,6 +251,9 @@ namespace cube_exp.Scene
             }
         }
 
+        /// <summary>
+        /// <see cref="pos"/>周辺の床の種類がスライムと一致するかどうかを調べる
+        /// </summary>
         private bool CheckFloorType(Vector3DI pos)
         {
             if (!IsCombined)
@@ -176,6 +270,9 @@ namespace cube_exp.Scene
             }
         }
 
+        /// <summary>
+        /// 合体を開始する
+        /// </summary>
         private void StartCombine()
         {
             for (var s = Slave; s != null; s = s.Slave)
@@ -186,6 +283,9 @@ namespace cube_exp.Scene
             IsCombined = true;
         }
 
+        /// <summary>
+        /// 分裂を開始する
+        /// </summary>
         private void StartDisperse()
         {
             IsCombined = false;
