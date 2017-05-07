@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace cube_exp.Scene
+namespace cube_exp
 {
     /// <summary>
     /// ファイルから読み込んだ生のマップデータ

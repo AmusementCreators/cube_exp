@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.ComponentModel;
 
-namespace cube_exp.Scene
+namespace cube_exp
 {
     /// <summary>
     /// スライム
@@ -16,20 +16,19 @@ namespace cube_exp.Scene
         private const uint MoveAnimationLength = 20;
 
         /// <summary>
-        /// 移動が終わってから後続のスライムの移動を開始するまでの遅延フレーム数
-        /// </summary>
-        private const uint SlaveMoveDelay = 10;
-
-        /// <summary>
         /// ジャンプ高さ計算時に用いる係数
         /// </summary>
-        private const float JumpPower = 0.00005f * MoveAnimationLength * MoveAnimationLength;
+        private const float JumpPower = 1f / 40000f * MoveAnimationLength * MoveAnimationLength;
 
         /// <summary>
         /// 経過フレーム数
         /// </summary>
-        private uint MoveCount = MoveAnimationLength + 1;
+        private uint MoveCount { get { return (Layer.Scene as GameScene).Counter; } }
 
+        /// <summary>
+        /// 移動開始からの経過時間
+        /// </summary>
+        public uint LastMoveCount { get; private set; } = 0;
 
         /// <summary>
         /// 現在の座標
@@ -49,12 +48,17 @@ namespace cube_exp.Scene
         /// <summary>
         /// メインのスライム（操作するやつ）かどうか
         /// </summary>
-        public bool IsMaster { get; set; } = false;
+        public bool IsMain { get; set; } = false;
+
+        /// <summary>
+        /// 一つ前のスライム
+        /// </summary>
+        public Slime Follow { get; set; } = null;
 
         /// <summary>
         /// 後続のスライム
         /// </summary>
-        public Slime Slave { get; set; } = null;
+        public Slime Follower { get; set; } = null;
 
 
         /// <summary>
@@ -72,8 +76,6 @@ namespace cube_exp.Scene
         /// 現在のテクスチャ番号
         /// </summary>
         public int CurrentType { get; private set; } = 1;
-
-
 
         /// <summary>
         /// コンストラクタ
@@ -95,41 +97,38 @@ namespace cube_exp.Scene
             GridPosOld = pos;
         }
 
+
+
         protected override void OnUpdate()
         {
-            if (MoveCount <= MoveAnimationLength)//移動中
+            if (MoveCount <= LastMoveCount + MoveAnimationLength)//移動中
             {
-                var axis = (GridPos2 - GridPos).ToAsd3DF() / MoveAnimationLength;
-                Position = GridPos.ToAsd3DF() + axis * MoveCount + new asd.Vector3DF(0, Parabola(), 0);
-                if (IsCombined) Position += new asd.Vector3DF(0.5f, 0.5f, 0.5f);
+                var prg = (float)(MoveCount - LastMoveCount) / MoveAnimationLength;
+                var axis = (GridPos2 - GridPos).ToAsd3DF();
+                Position = GridPos.ToAsd3DF() + axis * prg + new asd.Vector3DF(0, Parabola(), 0);
+                if (IsCombined) Position += new asd.Vector3DF(0.5f, 0.5f, 0.5f) * (IsChanging ? prg : 1.0f);
             }
             else //移動完了
             {
                 GridPos = GridPos2;
-                if (IsMaster) Control();
-            }
-
-            if (Slave != null && MoveCount == MoveAnimationLength + SlaveMoveDelay && Slave.MoveCount >= MoveAnimationLength)
-            {//サブの移動
-
-                if (!IsChanging)
-                {
-                    Slave.MoveTo(GridPosOld, true);
-                }
                 IsChanging = false;
+                if (IsMain) Control();
+                else if (MoveCount > Follow.LastMoveCount + MoveAnimationLength &&
+                    GridPos != Follow.GridPosOld) MoveTo(Follow.GridPosOld, true);
             }
 
             //合体すると大きくなる
-            if (IsMaster && IsCombined)
+            if (IsMain && IsCombined && !IsChanging)
             {
                 var c = 1.0f;
-                for (var s = Slave; s != null; s = s.Slave) c *= 1.2f;
+                for (var s = Follower; s != null; s = s.Follower)
+                {
+                    s.IsDrawn = false;
+                    c *= 1.2f;
+                }
                 Scale = new asd.Vector3DF(c, c, c) / 2;
+                
             }
-
-            //時間は常に進む
-            MoveCount++;
-
         }
 
         /// <summary>
@@ -138,7 +137,7 @@ namespace cube_exp.Scene
         private void Control()
         {
             //角度計算
-            var angle = (int)((Layer.Scene as Game).CameraAngleR / (float)Math.PI * 180.0 + 180 + 22.5);
+            var angle = (int)((Layer.Scene as GameScene).CameraAngleR / (float)Math.PI * 180.0 + 180 + 22.5);
             while (angle > 360) angle -= 360;
             while (angle < 0) angle += 360;
             angle /= 45;
@@ -174,7 +173,7 @@ namespace cube_exp.Scene
             if (asd.Engine.Keyboard.GetKeyState(asd.Keys.LeftShift) == asd.KeyState.Push)
             {
                 CurrentType = (CurrentType + 1) % 5 + 1;
-                for (var s = this; s != null; s = s.Slave)
+                for (var s = this; s != null; s = s.Follower)
                 {
                     s.CurrentType = CurrentType;
                     ObjectFactory.UpdateModel(s, CurrentType);
@@ -188,8 +187,8 @@ namespace cube_exp.Scene
         private float Parabola()
         {
             const float ys = ((float)MoveAnimationLength * MoveAnimationLength) / 4;
-            float x = (MoveCount - (float)MoveAnimationLength / 2);
-            return (ys - x * x) * (IsMaster ? JumpPower : JumpPower / 2);
+            float x = ((MoveCount - LastMoveCount) - (float)MoveAnimationLength / 2);
+            return (ys - x * x) * (IsMain ? JumpPower : JumpPower / 2);
         }
 
         /// <summary>
@@ -215,9 +214,9 @@ namespace cube_exp.Scene
             if (Layer.Objects.OfType<Slime>().Any(x => x.GridPos == cpos || x.GridPos2 == cpos) && !force && !IsCombined) return; // すでに小スライムがある場所には行かない
             if (!CheckFloorType(cpos)) return;
 
-            MoveCount = 0;
             GridPosOld = GridPos;
             GridPos2 = cpos;
+            LastMoveCount = MoveCount;
         }
 
         /// <summary>
@@ -226,7 +225,7 @@ namespace cube_exp.Scene
         [EditorBrowsable(EditorBrowsableState.Never)]
         private int _BlockCode(Vector3DI pos, int offsetX = 0, int offsetY = 0, int offsetZ = 0)
         {
-            return (Layer.Scene as Game).GetMapData(pos.X + offsetX, pos.Y + offsetY, pos.Z + offsetZ);
+            return (Layer.Scene as GameScene).GetMapData(pos.X + offsetX, pos.Y + offsetY, pos.Z + offsetZ);
         }
 
         /// <summary>
@@ -275,7 +274,7 @@ namespace cube_exp.Scene
         /// </summary>
         private void StartCombine()
         {
-            for (var s = Slave; s != null; s = s.Slave)
+            for (var s = this; s != null; s = s.Follower)
             {
                 s.MoveTo(GridPos, true);
                 s.IsChanging = true;
@@ -293,16 +292,16 @@ namespace cube_exp.Scene
             MoveTo(GridPos, true);
             IsChanging = true;
 
-            var s = Slave;
+            var s = Follower;
             s.MoveTo(GridPos + new Vector3DI(1, 0, 0));
             s.IsDrawn = true;
             s.IsChanging = true;
-            s = s.Slave;
+            s = s.Follower;
 
             s.MoveTo(GridPos + new Vector3DI(1, 0, 1));
             s.IsDrawn = true;
             s.IsChanging = true;
-            s = s.Slave;
+            s = s.Follower;
 
             s.MoveTo(GridPos + new Vector3DI(0, 0, 1));
             s.IsChanging = true;

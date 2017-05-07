@@ -12,7 +12,7 @@ namespace cube_exp
         {
             if (!asd.Engine.Initialize("cube [experimental]", 1280, 720, new asd.EngineOption()))return;
 
-            asd.Engine.ChangeScene(new Scene.Game());
+            asd.Engine.ChangeScene(new GameScene());
 
             asd.Engine.ProfilerIsVisible = true;
 

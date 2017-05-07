@@ -49,12 +49,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ObjectFactory.cs" />
+    <Compile Include="Game\GameScene.cs" />
+    <Compile Include="Game\Map.cs" />
+    <Compile Include="Game\ObjectFactory.cs" />
+    <Compile Include="Game\Slime.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Scene\Game.cs" />
-    <Compile Include="Scene\Map.cs" />
-    <Compile Include="Scene\Slime.cs" />
     <Compile Include="Vector3DI.cs" />
   </ItemGroup>
   <ItemGroup>
