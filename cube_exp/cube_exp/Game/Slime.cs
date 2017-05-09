@@ -8,7 +8,7 @@ namespace cube_exp
     /// <summary>
     /// スライム
     /// </summary>
-    class Slime : asd.ModelObject3D
+    class Slime : BaseObject
     {
         /// <summary>
         /// 1マス移動するモーションのフレーム数
@@ -29,12 +29,7 @@ namespace cube_exp
         /// 移動開始からの経過時間
         /// </summary>
         public uint LastMoveCount { get; private set; } = 0;
-
-        /// <summary>
-        /// 現在の座標
-        /// </summary>
-        public Vector3DI GridPos { get; private set; }
-
+        
         /// <summary>
         /// 次に移動する先の座標
         /// </summary>

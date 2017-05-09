@@ -49,6 +49,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Game\BaseObject.cs" />
+    <Compile Include="Game\Block.cs" />
+    <Compile Include="Game\BlockComponent\BlockComponent.cs" />
     <Compile Include="Game\GameScene.cs" />
     <Compile Include="Game\Map.cs" />
     <Compile Include="Game\ObjectFactory.cs" />

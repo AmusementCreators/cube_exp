@@ -38,7 +38,7 @@ namespace cube_exp
         /// <param name="textureID">テクスチャ番号</param>
         /// <returns>モデルオブジェクト</returns>
         /// <remarks><see cref="textureID"/> = 0 は空白なので使用しない</remarks>
-        public static T Create<T>(Vector3DI pos, int textureID) where T : asd.ModelObject3D, new()
+        public static T Create<T>(Vector3DI pos, int textureID) where T : BaseObject, new()
         {
             if (textureID == 0) return null;
             var obj = new T();
@@ -53,7 +53,7 @@ namespace cube_exp
         /// <param name="obj">モデルオブジェクト</param>
         /// <param name="textureID">テクスチャ番号</param>
         /// <remarks><see cref="textureID"/> = 0 は空白なので使用しない</remarks>
-        public static void UpdateModel<T>(T obj, int textureID) where T : asd.ModelObject3D, new()
+        public static void UpdateModel<T>(T obj, int textureID) where T : BaseObject, new()
         {
             if (textureID == 0) return;
             obj.SetModel(Models[textureID]);

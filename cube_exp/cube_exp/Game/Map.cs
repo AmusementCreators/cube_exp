@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Globalization;
 
 namespace cube_exp
 {
@@ -40,15 +40,16 @@ namespace cube_exp
         {
             var file = asd.Engine.File.CreateStaticFile(fileName);
             var raw = Encoding.UTF8.GetString(file.Buffer)
-                .Split(new[] { ' ', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(x => int.Parse(x)).ToArray();
+                .Split(new[] { ' ', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
 
-            SizeX = raw[0];
-            SizeY = raw[1];
-            SizeZ = raw[2];
+            var size = raw.Take(3).Select(x => int.Parse(x)).ToArray();
+            SizeX = size[0];
+            SizeY = size[1];
+            SizeZ = size[2];
 
+            var field = raw.Skip(3).Select(x => int.Parse(x, NumberStyles.HexNumber)).ToArray();
             Data = new int[SizeY][][];
-            int counter = 3;
+            int counter = 0;
             for (int y = SizeY - 1; y >= 0; y--)
             {
                 Data[y] = new int[SizeX][];
@@ -57,7 +58,7 @@ namespace cube_exp
                     Data[y][x] = new int[SizeZ];
                     for (int z = 0; z < SizeZ; z++)
                     {
-                        Data[y][x][z] = raw[counter++];
+                        Data[y][x][z] = field[counter++];
                     }
                 }
             }
@@ -67,7 +68,7 @@ namespace cube_exp
         /// マップ上のオブジェクトを生成して列挙する
         /// </summary>
         /// <returns></returns>
-        public IEnumerator<asd.ModelObject3D> GetEnumerator()
+        public IEnumerator<Block> GetEnumerator()
         {
             for (int x = 0; x < SizeX; x++)
             {
@@ -77,13 +78,12 @@ namespace cube_exp
                     {
                         if (Data[y][x][z] != 0)
                         {
-                            yield return ObjectFactory.Create<asd.ModelObject3D>(new Vector3DI(x, y, z), Data[y][x][z]);
+                            yield return ObjectFactory.Create<Block>(new Vector3DI(x, y, z), Data[y][x][z]);
                         }
                     }
                 }
             }
         }
-
 
         public int GetData(int x, int y, int z)
         {

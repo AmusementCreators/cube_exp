@@ -9,11 +9,11 @@ namespace cube_exp
     class GameScene : asd.Scene
     {
         private MapRawData MapData;
-        public asd.CameraObject3D Camera { get; private set; }
-        public Slime Character { get; private set; }
+        private Slime[] Slimes;
+
         public uint Counter { get; private set; } = 0;
 
-
+        public asd.CameraObject3D Camera { get; private set; }
         public float CameraAngleH { get; private set; } = asd.MathHelper.DegreeToRadian(45);
         public float CameraAngleR { get; private set; } = asd.MathHelper.DegreeToRadian(45);
         private float CameraAngleHTarget = asd.MathHelper.DegreeToRadian(45);
@@ -63,40 +63,42 @@ namespace cube_exp
 
         private void InitializeSlimes(asd.Layer3D layer)
         {
-            var s1 = ObjectFactory.Create<Slime>(new Vector3DI(), 1);
-            layer.AddObject(s1);
-            var s2 = ObjectFactory.Create<Slime>(new Vector3DI(), 1);
-            layer.AddObject(s2);
-            var s3 = ObjectFactory.Create<Slime>(new Vector3DI(), 1);
-            layer.AddObject(s3);
-            Character = ObjectFactory.Create<Slime>(new Vector3DI(), 1);
-            layer.AddObject(Character);
+            Slimes = new Slime[4];
+
+            Slimes[3] = ObjectFactory.Create<Slime>(new Vector3DI(), 1);
+            layer.AddObject(Slimes[3]);
+            Slimes[2] = ObjectFactory.Create<Slime>(new Vector3DI(), 1);
+            layer.AddObject(Slimes[2]);
+            Slimes[1] = ObjectFactory.Create<Slime>(new Vector3DI(), 1);
+            layer.AddObject(Slimes[1]);
+            Slimes[0] = ObjectFactory.Create<Slime>(new Vector3DI(), 1);
+            layer.AddObject(Slimes[0]);
 
 
-            s1.SetInitialPosition(new Vector3DI(5, 1, 5));
-            s1.IsMain = false;
-            s1.Follow = s2;
-            s1.Follower = null;
+            Slimes[3].SetInitialPosition(new Vector3DI(5, 1, 5));
+            Slimes[3].IsMain = false;
+            Slimes[3].Follow = Slimes[2];
+            Slimes[3].Follower = null;
 
-            s2.SetInitialPosition(new Vector3DI(5, 1, 5));
-            s2.IsMain = false;
-            s2.Follow = s3;
-            s2.Follower = s1;
+            Slimes[2].SetInitialPosition(new Vector3DI(5, 1, 5));
+            Slimes[2].IsMain = false;
+            Slimes[2].Follow = Slimes[1];
+            Slimes[2].Follower = Slimes[3];
 
-            s3.SetInitialPosition(new Vector3DI(5, 1, 5));
-            s3.IsMain = false;
-            s3.Follow = Character;
-            s3.Follower = s2;
+            Slimes[1].SetInitialPosition(new Vector3DI(5, 1, 5));
+            Slimes[1].IsMain = false;
+            Slimes[1].Follow = Slimes[0];
+            Slimes[1].Follower = Slimes[2];
 
-            Character.SetInitialPosition(new Vector3DI(5, 1, 5));
-            Character.IsMain = true;
-            Character.Follow = null;
-            Character.Follower = s3;
+            Slimes[0].SetInitialPosition(new Vector3DI(5, 1, 5));
+            Slimes[0].IsMain = true;
+            Slimes[0].Follow = null;
+            Slimes[0].Follower = Slimes[1];
         }
 
         protected override void OnUpdating()
         {
-            Camera.Focus = new asd.Vector3DF(Character.Position.X, 0, Character.Position.Z);
+            Camera.Focus = new asd.Vector3DF(Slimes[0].Position.X, 0, Slimes[0].Position.Z);
 
             if (asd.Engine.Keyboard.GetKeyState(asd.Keys.Up) == asd.KeyState.Push &&
                 CameraAngleHTarget < asd.MathHelper.DegreeToRadian(60)) CameraAngleHTarget += asd.MathHelper.DegreeToRadian(15f);

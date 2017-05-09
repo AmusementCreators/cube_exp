@@ -70,5 +70,10 @@ namespace cube_exp
         {
             return new Vector3DI((int)v.X, 0, (int)v.Y);
         }
+
+        public uint GetManhattanDistance()
+        {
+            return (uint)(Math.Abs(X) + Math.Abs(Y) + Math.Abs(Z));
+        }
     }
 }
