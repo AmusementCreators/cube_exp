@@ -78,7 +78,11 @@ namespace cube_exp
                     {
                         if (Data[y][x][z] != 0)
                         {
-                            yield return ObjectFactory.Create<Block>(new Vector3DI(x, y, z), Data[y][x][z]);
+                            var obj = ObjectFactory.Create<Block>(new Vector3DI(x, y, z), Data[y][x][z] & 0x0f);
+                            obj.Type = Data[y][x][z];
+                            //ここで Data[y][x][z] & 0xf0 をもとにコンポーネントを生成する。
+                            Data[y][x][z] &= 0x0f;
+                            yield return obj;
                         }
                     }
                 }
