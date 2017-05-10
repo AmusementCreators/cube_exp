@@ -106,10 +106,11 @@ namespace cube_exp
             else //移動完了
             {
                 GridPos = GridPos2;
-                IsChanging = false;
                 if (IsMain) Control();
                 else if (MoveCount > Follow.LastMoveCount + MoveAnimationLength &&
-                    GridPos != Follow.GridPosOld) MoveTo(Follow.GridPosOld, true);
+                    GridPos != Follow.GridPosOld && !IsChanging) MoveTo(Follow.GridPosOld, true);
+                IsChanging = false;
+
             }
 
             //合体すると大きくなる
@@ -122,7 +123,16 @@ namespace cube_exp
                     c *= 1.2f;
                 }
                 Scale = new asd.Vector3DF(c, c, c) / 2;
-                
+            }
+
+            if(!IsMain && !IsChanging)
+            {
+                var m = this;
+                while (m.Follow != null) m = m.Follow;
+                if (m.IsCombined)
+                {
+                    Position = new asd.Vector3DF();
+                }
             }
         }
 
@@ -288,16 +298,19 @@ namespace cube_exp
             IsChanging = true;
 
             var s = Follower;
+            s.SetInitialPosition(GridPos + new Vector3DI(1, 0, 0));
             s.MoveTo(GridPos + new Vector3DI(1, 0, 0));
             s.IsDrawn = true;
             s.IsChanging = true;
             s = s.Follower;
 
+            s.SetInitialPosition(GridPos + new Vector3DI(1, 0, 1));
             s.MoveTo(GridPos + new Vector3DI(1, 0, 1));
             s.IsDrawn = true;
             s.IsChanging = true;
             s = s.Follower;
 
+            s.SetInitialPosition(GridPos + new Vector3DI(1, 0, 1));
             s.MoveTo(GridPos + new Vector3DI(0, 0, 1));
             s.IsChanging = true;
             s.IsDrawn = true;
