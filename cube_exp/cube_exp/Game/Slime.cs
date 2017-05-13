@@ -230,7 +230,7 @@ namespace cube_exp
         [EditorBrowsable(EditorBrowsableState.Never)]
         private int _BlockCode(Vector3DI pos, int offsetX = 0, int offsetY = 0, int offsetZ = 0)
         {
-            return (Layer.Scene as GameScene).GetMapData(pos.X + offsetX, pos.Y + offsetY, pos.Z + offsetZ);
+            return (Layer.Scene as GameScene).MapData.GetData(pos.X + offsetX, pos.Y + offsetY, pos.Z + offsetZ);
         }
 
         /// <summary>

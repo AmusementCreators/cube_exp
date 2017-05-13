@@ -21,6 +21,7 @@ namespace cube_exp
             Count++;
             if (Count > 60)
             {
+                (Owner.Layer.Scene as GameScene).MapData.UpdateData(Owner.GridPos, 0);
                 Owner.Layer.RemoveObject(Owner);
             }
 

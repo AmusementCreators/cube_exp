@@ -8,7 +8,7 @@ namespace cube_exp
 {
     class GameScene : asd.Scene
     {
-        private MapRawData MapData;
+        public MapRawData MapData { get; private set; }
         private Slime[] Slimes;
 
         public uint Counter { get; private set; } = 0;
@@ -22,13 +22,6 @@ namespace cube_exp
         public Vector3DI GetSlimePos()
         {
             return Slimes[0].GridPos;
-        }
-
-        public int GetMapData(int x, int y, int z)
-        {
-            if (x < 0 || y < 0 || z < 0) return 0;
-            if (x >= MapData.SizeX || y >= MapData.SizeY || z >= MapData.SizeZ) return 0;
-            return MapData.GetData(x, y, z);
         }
 
         protected override void OnRegistered()

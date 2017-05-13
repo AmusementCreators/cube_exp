@@ -80,7 +80,7 @@ namespace cube_exp
                         {
                             var obj = ObjectFactory.Create<Block>(new Vector3DI(x, y, z), Data[y][x][z] & 0x0f);
                             obj.Type = Data[y][x][z];
-                            switch ((Data[y][x][z] & 0xf0) >> 8)
+                            switch ((Data[y][x][z] & 0xf0) >> 4)
                             {
                                 case 0:
                                     break;
@@ -96,9 +96,45 @@ namespace cube_exp
             }
         }
 
+        /// <summary>
+        /// (<see cref="x"/>, <see cref="y"/>, <see cref="z"/>)のデータを返す
+        /// </summary>
         public int GetData(int x, int y, int z)
         {
             return Data[y][x][z];
+        }
+
+        /// <summary>
+        /// (<see cref="x"/>, <see cref="y"/>, <see cref="z"/>)のデータを返す
+        /// </summary>
+        public int GetData(Vector3DI gpos)
+        {
+            return Data[gpos.Y][gpos.X][gpos.Z];
+        }
+
+        /// <summary>
+        /// <see cref="gpos"/>のデータを更新する
+        /// </summary>
+        public void UpdateData(int x, int y, int z, int value)
+        {
+            Data[y][x][z] = value;
+        }
+
+        /// <summary>
+        /// <see cref="gpos"/>のデータを更新する
+        /// </summary>
+        public void UpdateData(Vector3DI gpos, int value)
+        {
+            Data[gpos.Y][gpos.X][gpos.Z] = value;
+        }
+
+        /// <summary>
+        /// (<see cref="x"/>, <see cref="y"/>, <see cref="z"/>)がマップの範囲内かどうかをチェックする
+        /// </summary>
+        public bool IsInvalidPosition(int x, int y, int z)
+        {
+            return (x >= 0 && y >= 0 && z >= 0 &&
+                x < SizeX && y < SizeY && z < SizeZ);
         }
     }
 }
