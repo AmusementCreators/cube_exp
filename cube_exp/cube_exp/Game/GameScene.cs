@@ -19,6 +19,10 @@ namespace cube_exp
         private float CameraAngleHTarget = asd.MathHelper.DegreeToRadian(45);
         private float CameraAngleRTarget = asd.MathHelper.DegreeToRadian(45);
 
+        public Vector3DI GetSlimePos()
+        {
+            return Slimes[0].GridPos;
+        }
 
         public int GetMapData(int x, int y, int z)
         {

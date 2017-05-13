@@ -80,7 +80,14 @@ namespace cube_exp
                         {
                             var obj = ObjectFactory.Create<Block>(new Vector3DI(x, y, z), Data[y][x][z] & 0x0f);
                             obj.Type = Data[y][x][z];
-                            //ここで Data[y][x][z] & 0xf0 をもとにコンポーネントを生成する。
+                            switch ((Data[y][x][z] & 0xf0) >> 8)
+                            {
+                                case 0:
+                                    break;
+                                case 1:
+                                    obj.Component = new Melt();
+                                    break;
+                            }
                             Data[y][x][z] &= 0x0f;
                             yield return obj;
                         }
